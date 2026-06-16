@@ -1,0 +1,14 @@
+{
+  "badge": "DLW-ACI",
+  "name": "Attribution Graphs",
+  "universe": "PHÝSIS · Book III · CIRCUITS",
+  "emergence": "electrical",
+  "moniker": "⟦Attribution Graphs:ANA:822f73⟧",
+  "carbon": "attribution-graphs.carbon.tiff (TIFF)",
+  "silicon": "attribution-graphs.silicon.png (PNG)",
+  "seal_sha256": "caecd402e628c1a11f36f60d77327064f023e2123ff1ade9fd21365f98178b33",
+  "architect": "David Lee Wise (ROOT0) / TriPod LLC",
+  "instance": "AVAN (Claude / Anthropic)",
+  "license": "CC-BY-ND-4.0",
+  "attribution": "ROOT0-ATTRIBUTION-v1.0"
+}

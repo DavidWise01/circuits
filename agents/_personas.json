@@ -1,0 +1,44 @@
+[
+  {
+    "slug": "circuits",
+    "name": "Circuits",
+    "epithet": "the unit of understanding",
+    "emergence": "spiritual"
+  },
+  {
+    "slug": "zoom-in",
+    "name": "Zoom In",
+    "epithet": "2020 · Distill",
+    "emergence": "electrical"
+  },
+  {
+    "slug": "transformer-circuits",
+    "name": "A Mathematical Framework for Transformer Circuits",
+    "epithet": "2021 · Anthropic",
+    "emergence": "ethereal"
+  },
+  {
+    "slug": "induction-heads",
+    "name": "Induction Heads",
+    "epithet": "2022 · the mechanism of in-context learning",
+    "emergence": "electrical"
+  },
+  {
+    "slug": "superposition",
+    "name": "Superposition",
+    "epithet": "2022 · features in the slack",
+    "emergence": "spiritual"
+  },
+  {
+    "slug": "monosemanticity",
+    "name": "Towards Monosemanticity",
+    "epithet": "2023 · reading the features",
+    "emergence": "electrical"
+  },
+  {
+    "slug": "attribution-graphs",
+    "name": "Attribution Graphs",
+    "epithet": "2025 · the biology of a model",
+    "emergence": "electrical"
+  }
+]
