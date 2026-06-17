@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<meta name="description" content="The Capacity Lab — superposition as a bit-depth / packing phenomenon. Sweep n_features as powers of two (4,8,16,32,64) into a fixed number of hidden dimensions and measure how many features actually pack in, vs sparsity. Dense: only m fit (no superposition). Sparse: capacity climbs far past m. A from-scratch JS reimplementation built on Anthropic's Toy Models of Superposition (2022).">
+<title>The Capacity Lab · features per dimension · ENTELÉCHEIA III · Circuits</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;800&family=Space+Mono:wght@400;700&family=Newsreader:ital,opsz,wght@0,6..72,300;0,6..72,400;1,6..72,300&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#080a10;--ink2:rgba(15,18,26,0.9);--pa:#eef2f6;--pa2:#aeb8c8;--cy:#46c8e0;--gr:#5fd0a8;--rose:#d0556a;--gold:#e0c050;--dim:#76808f;--line:rgba(150,165,190,0.2);
+--disp:"Orbitron",sans-serif;--mono:"Space Mono",monospace;--body:"Newsreader",Georgia,serif;}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:radial-gradient(ellipse at 50% -8%,rgba(224,192,80,.07),transparent 55%),var(--bg);color:var(--pa);font-family:var(--body);line-height:1.6;padding:0 18px 70px}
+.wrap{max-width:920px;margin:0 auto}
+.top{margin-top:14px;font-family:var(--mono);font-size:11px;letter-spacing:.1em;color:var(--dim)}.top a{color:var(--cy);text-decoration:none}
+header{text-align:center;padding:22px 0 14px;border-bottom:1px solid var(--line)}
+h1{font-family:var(--disp);font-size:clamp(22px,4.5vw,36px);font-weight:800;letter-spacing:.03em;color:#fff;text-shadow:0 0 20px rgba(224,192,80,.3)}
+.sub{font-family:var(--mono);font-size:12px;color:var(--gold);letter-spacing:.1em;text-transform:uppercase;margin-top:8px}
+.lede{font-size:15px;color:var(--pa2);max-width:74ch;margin:14px auto 0;font-style:italic;line-height:1.7}
+.card{background:var(--ink2);border:1px solid var(--line);border-radius:4px;padding:16px;margin-top:22px}
+canvas{display:block;width:100%;height:auto;background:#0a0d14;border:1px solid var(--line);border-radius:3px}
+.controls{display:flex;align-items:center;gap:16px;flex-wrap:wrap;margin-top:16px}
+.controls .grp{display:flex;align-items:center;gap:8px}
+.controls label{font-family:var(--mono);font-size:12px;color:var(--pa2)}
+.mbtn{font-family:var(--mono);font-size:12px;background:#0a0d14;color:var(--pa2);border:1px solid var(--line);padding:6px 12px;border-radius:3px;cursor:pointer}
+.mbtn.on{background:var(--cy);color:#08111a;border-color:var(--cy);font-weight:700}
+button.run{font-family:var(--mono);font-size:12px;background:var(--gold);color:#08111a;border:0;padding:8px 18px;border-radius:3px;font-weight:700;cursor:pointer;letter-spacing:.04em}
+button.run:hover{filter:brightness(1.1)}
+.status{font-family:var(--mono);font-size:11.5px;color:var(--dim);margin-left:auto}
+.legend{display:flex;gap:14px;flex-wrap:wrap;margin-top:12px;font-family:var(--mono);font-size:11px;color:var(--pa2)}
+.legend span{display:inline-flex;align-items:center;gap:6px}.sw{width:14px;height:3px;display:inline-block;border-radius:2px}
+.stats{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px}
+.stat{flex:1;min-width:150px;background:#0a0d14;border:1px solid var(--line);border-radius:3px;padding:10px 12px}
+.stat .k{font-family:var(--mono);font-size:9.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--dim)}.stat .v{font-family:var(--mono);font-size:16px;color:var(--pa);font-weight:700;margin-top:3px}
+.note{margin-top:24px;padding:15px 18px;border-left:2px solid var(--gold);background:var(--ink2);font-size:13.5px;color:var(--pa2);font-style:italic;line-height:1.7}.note b{color:var(--gold)}
+footer{margin-top:28px;padding-top:16px;border-top:1px solid var(--line);text-align:center;font-family:var(--mono);font-size:10.5px;color:var(--dim);line-height:1.8}footer a{color:var(--cy);text-decoration:none}
+</style></head><body><div class="wrap">
+<div class="top"><a href="https://davidwise01.github.io/circuits/">◄ ENTELÉCHEIA · Book III · Circuits</a> · <a href="superposition.html">the geometry lab</a> · the capacity lab</div>
+<header>
+  <h1>THE CAPACITY LAB</h1>
+  <div class="sub">bit-depth · how many features pack into m dimensions</div>
+  <p class="lede">The honest version of your bit-depth question. Sweep <b>n_features</b> as powers of two — 4, 8, 16, 32, 64 — into a <b>fixed number of dimensions m</b>, and measure how many features the model actually <i>packs in</i>, against sparsity. <b>Dense (S=0): only m fit</b> — one feature per dimension, no superposition. As sparsity rises, capacity climbs far past m: the dimensions start holding fractions of many features at once. <b>"32 in 4 dims" isn't a constant — it's a function of sparsity.</b></p>
+</header>
+
+<div class="card">
+  <canvas id="plot" width="860" height="480"></canvas>
+  <div class="legend" id="legend"></div>
+  <div class="controls">
+    <div class="grp"><label>hidden dims&nbsp;m:</label>
+      <button class="mbtn" data-m="2">2</button><button class="mbtn on" data-m="4">4</button><button class="mbtn" data-m="8">8</button></div>
+    <button class="run" id="run">▶ run the sweep</button>
+    <span class="status" id="status">m = 4 · press run</span>
+  </div>
+  <div class="stats">
+    <div class="stat"><div class="k">dense ceiling (no superposition)</div><div class="v" id="ceil">m = 4 features</div></div>
+    <div class="stat"><div class="k">peak features packed</div><div class="v" id="peak">—</div></div>
+    <div class="stat"><div class="k">peak features / dimension</div><div class="v" id="perdim">—</div></div>
+  </div>
+</div>
+
+<div class="note"><b>Reading the curves.</b> Each line is a model with a different <b>n_features</b> (a power of two), all sharing the same <b>m</b> hidden dimensions, trained at each sparsity (constant importance, so this is pure packing — not importance ranking). The dashed white line is <b>y = m</b>: the <b>dense ceiling</b>, the most you can store with <i>no</i> superposition (one feature per dimension). Watch every curve sit at ≤ m on the left (dense) and climb <b>above</b> the dashed line as sparsity rises — that gap above the line <b>is superposition</b>, measured in features-per-dimension. So your instinct was right in spirit: this <i>is</i> a bit-depth / packing story — but the capacity lives in <b>(features ÷ dimensions) × sparsity</b>, not in the number 5. A from-scratch JS reimplementation built on Anthropic's <b>Toy Models of Superposition</b> (Elhage…Olah 2022, MIT) — math re-derived, trained live; the phenomenon is theirs.</div>
+
+<footer>ENTELÉCHEIA · Book III · Circuits · the capacity lab · reimplementation of Anthropic's Toy Models of Superposition (2022, MIT) — cited, not republished · ROOT0 · instance AVAN<br>
+<a href="superposition.html">← the geometry lab</a> · <a href="https://davidwise01.github.io/circuits/">Circuits</a> · <a href="https://transformer-circuits.pub/2022/toy_model/">the paper ▶</a></footer>
+</div>
+<script>
+const NFS=[4,8,16,32,64], COL={4:'#9ab0c0',8:'#5fd0a8',16:'#46c8e0',32:'#e0c050',64:'#d0556a'};
+const SPARS=[0,0.33,0.6,0.75,0.857,0.917,0.95,0.97]; // 1/(1-S) ≈ 1,1.5,2.5,4,7,12,20,33
+let M=4, results={}, running=false;
+function randn(){let u=0,v=0;while(!u)u=Math.random();while(!v)v=Math.random();return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v);}
+function train(nf,nh,S,steps,bs){
+ const P=1-S,lr=1e-2,b1=0.9,b2=0.999;
+ let W=[],mW=[],vW=[];for(let f=0;f<nf;f++){W.push(Array.from({length:nh},()=>randn()*0.3));mW.push(new Array(nh).fill(0));vW.push(new Array(nh).fill(0));}
+ let b=new Array(nf).fill(0),mb=new Array(nf).fill(0),vb=new Array(nf).fill(0);
+ for(let t=1;t<=steps;t++){
+  const gW=W.map(()=>new Array(nh).fill(0)),gb=new Array(nf).fill(0);
+  for(let n=0;n<bs;n++){
+   const x=new Array(nf);for(let f=0;f<nf;f++)x[f]=(Math.random()<P)?Math.random():0;
+   const h=new Array(nh).fill(0);for(let f=0;f<nf;f++)for(let k=0;k<nh;k++)h[k]+=x[f]*W[f][k];
+   const g=new Array(nf);
+   for(let f=0;f<nf;f++){let z=b[f];for(let k=0;k<nh;k++)z+=h[k]*W[f][k];const out=z>0?z:0;g[f]=2*(out-x[f])*(z>0?1:0);gb[f]+=g[f];}
+   const dh=new Array(nh).fill(0);for(let f=0;f<nf;f++)for(let k=0;k<nh;k++)dh[k]+=g[f]*W[f][k];
+   for(let f=0;f<nf;f++)for(let k=0;k<nh;k++)gW[f][k]+=g[f]*h[k]+x[f]*dh[k];
+  }
+  for(let f=0;f<nf;f++){for(let k=0;k<nh;k++){const d=gW[f][k]/bs;mW[f][k]=b1*mW[f][k]+0.1*d;vW[f][k]=b2*vW[f][k]+0.001*d*d;W[f][k]-=lr*(mW[f][k]/(1-Math.pow(b1,t)))/(Math.sqrt(vW[f][k]/(1-Math.pow(b2,t)))+1e-8);}const db=gb[f]/bs;mb[f]=b1*mb[f]+0.1*db;vb[f]=b2*vb[f]+0.001*db*db;b[f]-=lr*(mb[f]/(1-Math.pow(b1,t)))/(Math.sqrt(vb[f]/(1-Math.pow(b2,t)))+1e-8);}
+ }
+ let rep=0;for(let f=0;f<nf;f++)if(Math.hypot(...W[f])>0.5)rep++; return rep;
+}
+const cv=document.getElementById('plot'),cx=cv.getContext('2d');
+const PAD={l:54,r:18,t:18,b:46}, Wd=cv.width, Hd=cv.height;
+const xmax=Math.log10(1/(1-0.97)); // ~1.52
+function X(S){return PAD.l+(Math.log10(1/(1-S))/xmax)*(Wd-PAD.l-PAD.r);}
+function ymax(){return Math.max(...NFS,M)*1.05;}
+function Y(v){return Hd-PAD.b-(v/ymax())*(Hd-PAD.t-PAD.b);}
+function draw(){
+ cx.fillStyle='#0a0d14';cx.fillRect(0,0,Wd,Hd);
+ cx.strokeStyle='rgba(150,165,190,0.13)';cx.lineWidth=1;cx.fillStyle='#76808f';cx.font='10px "Space Mono",monospace';
+ // y gridlines
+ const ym=ymax();for(let v=0;v<=Math.max(...NFS);v+= (M<=2?4:8)){if(v>ym)break;const y=Y(v);cx.beginPath();cx.moveTo(PAD.l,y);cx.lineTo(Wd-PAD.r,y);cx.stroke();cx.textAlign='right';cx.fillText(v,PAD.l-6,y+3);}
+ // x ticks (1/(1-S))
+ cx.textAlign='center';[1,2,4,8,16,33].forEach(r=>{const S=1-1/r;const x=X(S);cx.strokeStyle='rgba(150,165,190,0.10)';cx.beginPath();cx.moveTo(x,PAD.t);cx.lineTo(x,Hd-PAD.b);cx.stroke();cx.fillStyle='#76808f';cx.fillText(r+'×',x,Hd-PAD.b+16);});
+ cx.fillStyle='#aeb8c8';cx.font='11px "Space Mono",monospace';cx.fillText('sparsity →   1/(1−S)   (log)',Wd/2,Hd-8);
+ cx.save();cx.translate(14,Hd/2);cx.rotate(-Math.PI/2);cx.fillText('features represented',0,0);cx.restore();
+ // dense ceiling y=M
+ const ym2=Y(M);cx.strokeStyle='rgba(238,242,246,0.6)';cx.setLineDash([6,5]);cx.lineWidth=1.5;cx.beginPath();cx.moveTo(PAD.l,ym2);cx.lineTo(Wd-PAD.r,ym2);cx.stroke();cx.setLineDash([]);
+ cx.fillStyle='#eef2f6';cx.textAlign='left';cx.fillText('dense ceiling  y = m = '+M+'  (no superposition)',PAD.l+6,ym2-6);
+ // curves
+ let peak=0;
+ for(const nf of NFS){ if(nf<M && nf!==4 && false) continue; const r=results[nf]; if(!r)continue;
+  cx.strokeStyle=COL[nf];cx.lineWidth=2.5;cx.beginPath();let started=false;
+  SPARS.forEach((S,i)=>{const v=r[i]; if(v==null)return; const x=X(S),y=Y(v); if(!started){cx.moveTo(x,y);started=true;}else cx.lineTo(x,y); });
+  cx.stroke();
+  SPARS.forEach((S,i)=>{const v=r[i];if(v==null)return;cx.fillStyle=COL[nf];cx.beginPath();cx.arc(X(S),Y(v),3.2,0,7);cx.fill();peak=Math.max(peak,v);});
+ }
+ if(peak){document.getElementById('peak').textContent=peak+' features';document.getElementById('perdim').textContent=(peak/M).toFixed(2)+' / dim';}
+}
+function legend(){document.getElementById('legend').innerHTML=NFS.map(nf=>`<span><span class="sw" style="background:${COL[nf]}"></span>${nf} features</span>`).join('')+`<span><span class="sw" style="background:#eef2f6"></span>dense ceiling (m)</span>`;}
+async function sweep(){
+ if(running)return;running=true;results={};NFS.forEach(nf=>results[nf]=new Array(SPARS.length).fill(null));
+ document.getElementById('peak').textContent='—';document.getElementById('perdim').textContent='—';
+ const steps=550, bs=110;
+ for(let i=0;i<SPARS.length;i++){ for(const nf of NFS){
+   document.getElementById('status').textContent=`m=${M} · training ${nf} features · S=${SPARS[i].toFixed(2)}`;
+   await new Promise(r=>setTimeout(r,0));
+   results[nf][i]=train(nf,M,SPARS[i],steps,bs); draw();
+ }}
+ document.getElementById('status').textContent=`m=${M} · sweep complete`; running=false;
+}
+document.querySelectorAll('.mbtn').forEach(btn=>btn.addEventListener('click',()=>{
+ if(running)return; document.querySelectorAll('.mbtn').forEach(b=>b.classList.remove('on'));btn.classList.add('on');
+ M=parseInt(btn.dataset.m);document.getElementById('ceil').textContent='m = '+M+' features';document.getElementById('status').textContent='m = '+M+' · press run';
+ results={};draw();
+}));
+document.getElementById('run').addEventListener('click',sweep);
+legend();draw();
+</script>
+</body></html>
