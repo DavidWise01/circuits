@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<meta name="description" content="Toy Models of Superposition — a LIVE, in-browser reproduction of the iconic intro experiment: 5 features squeezed into 2 dimensions, swept across sparsity. Watch the feature vectors snap from 'two on the axes' (dense) into a pentagon (sparse) = superposition. A JS reimplementation of Anthropic's notebook (Elhage et al., 2022), trained live with Adam.">
+<title>Toy Models of Superposition · live · ENTELÉCHEIA III · Circuits</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;800&family=Space+Mono:wght@400;700&family=Newsreader:ital,opsz,wght@0,6..72,300;0,6..72,400;1,6..72,300&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#080a10;--ink2:rgba(15,18,26,0.9);--pa:#eef2f6;--pa2:#aeb8c8;--cy:#46c8e0;--gr:#5fd0a8;--rose:#d0556a;--gold:#e0c050;--dim:#76808f;--line:rgba(150,165,190,0.2);
+--disp:"Orbitron",sans-serif;--mono:"Space Mono",monospace;--body:"Newsreader",Georgia,serif;}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:radial-gradient(ellipse at 50% -8%,rgba(70,200,224,.08),transparent 55%),var(--bg);color:var(--pa);font-family:var(--body);line-height:1.6;padding:0 18px 70px}
+.wrap{max-width:1000px;margin:0 auto}
+.top{margin-top:14px;font-family:var(--mono);font-size:11px;letter-spacing:.1em;color:var(--dim)}.top a{color:var(--cy);text-decoration:none}
+header{text-align:center;padding:22px 0 14px;border-bottom:1px solid var(--line)}
+h1{font-family:var(--disp);font-size:clamp(22px,4.5vw,38px);font-weight:800;letter-spacing:.04em;color:#fff;text-shadow:0 0 20px rgba(70,200,224,.35)}
+.sub{font-family:var(--mono);font-size:12px;color:var(--cy);letter-spacing:.1em;text-transform:uppercase;margin-top:8px}
+.lede{font-size:15px;color:var(--pa2);max-width:74ch;margin:14px auto 0;font-style:italic;line-height:1.7}
+.panel{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:24px}
+@media(max-width:760px){.panel{grid-template-columns:1fr}}
+.card{background:var(--ink2);border:1px solid var(--line);border-radius:4px;padding:16px}
+.card h2{font-family:var(--mono);font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--cy);margin-bottom:4px}
+.card .h2s{font-size:12.5px;color:var(--dim);font-style:italic;margin-bottom:12px}
+canvas{display:block;width:100%;height:auto;background:#0a0d14;border:1px solid var(--line);border-radius:3px}
+.controls{background:var(--ink2);border:1px solid var(--line);border-radius:4px;padding:18px 20px;margin-top:20px}
+.row{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.row label{font-family:var(--mono);font-size:12px;color:var(--pa);min-width:120px}
+input[type=range]{flex:1;min-width:200px;accent-color:var(--cy)}
+.val{font-family:var(--mono);font-size:13px;color:var(--gold);min-width:128px;text-align:right}
+button{font-family:var(--mono);font-size:12px;background:var(--cy);color:#08111a;border:0;padding:8px 16px;border-radius:3px;font-weight:700;cursor:pointer;letter-spacing:.04em}
+button:hover{filter:brightness(1.12)}
+.stats{display:flex;gap:10px;flex-wrap:wrap;margin-top:16px}
+.stat{flex:1;min-width:130px;background:#0a0d14;border:1px solid var(--line);border-radius:3px;padding:10px 12px}
+.stat .k{font-family:var(--mono);font-size:9.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--dim)}
+.stat .v{font-family:var(--mono);font-size:17px;color:var(--pa);font-weight:700;margin-top:3px}
+.stat .v.geo{color:var(--gr)}
+.note{margin-top:26px;padding:15px 18px;border-left:2px solid var(--cy);background:var(--ink2);font-size:13.5px;color:var(--pa2);font-style:italic;line-height:1.7}.note b{color:var(--cy)}
+footer{margin-top:30px;padding-top:16px;border-top:1px solid var(--line);text-align:center;font-family:var(--mono);font-size:10.5px;color:var(--dim);line-height:1.8}footer a{color:var(--cy);text-decoration:none}
+.legend{display:flex;gap:14px;flex-wrap:wrap;justify-content:center;margin-top:10px;font-family:var(--mono);font-size:10px;color:var(--pa2)}
+.legend span{display:inline-flex;align-items:center;gap:5px}.sw{width:12px;height:12px;border-radius:2px;display:inline-block}
+</style></head><body><div class="wrap">
+<div class="top"><a href="https://davidwise01.github.io/circuits/">◄ ENTELÉCHEIA · Book III · Circuits</a> · the live tool</div>
+<header>
+  <h1>TOY MODELS OF SUPERPOSITION</h1>
+  <div class="sub">live · 5 features → 2 dimensions · trained in your browser</div>
+  <p class="lede">The iconic experiment, reproduced live. A tiny autoencoder must store <b>5 features</b> in only <b>2 dimensions</b>. When features are <b>dense</b>, it can only keep the 2 most important — the rest collapse to zero. As you raise <b>sparsity</b>, it starts packing <i>all five</i> into the plane, overlapping them and tolerating interference: <b>superposition</b>. Watch the feature vectors organize from the axes into a <b>pentagon</b>.</p>
+</header>
+
+<div class="panel">
+  <div class="card">
+    <h2>The Feature Geometry</h2><div class="h2s">each arrow = one feature's 2D weight vector (color = importance); the plane is the 2 hidden dims</div>
+    <canvas id="geo" width="460" height="460"></canvas>
+    <div class="legend"><span><span class="sw" style="background:#fde725"></span>most important</span><span><span class="sw" style="background:#21918c"></span>mid</span><span><span class="sw" style="background:#440154"></span>least important</span></div>
+  </div>
+  <div class="card">
+    <h2>WᵀW — the interference matrix</h2><div class="h2s">diagonal = how strongly each feature is stored; off-diagonal = overlap (interference) between features</div>
+    <canvas id="wtw" width="460" height="460"></canvas>
+    <div class="legend"><span><span class="sw" style="background:#d0556a"></span>+ (aligned)</span><span><span class="sw" style="background:#0a0d14"></span>0</span><span><span class="sw" style="background:#46c8e0"></span>− (opposed)</span></div>
+  </div>
+</div>
+
+<div class="controls">
+  <div class="row">
+    <label for="sp">Sparsity S</label>
+    <input type="range" id="sp" min="0" max="0.97" step="0.01" value="0">
+    <span class="val" id="spv">S = 0.00 · p = 1.00</span>
+  </div>
+  <div class="row" style="margin-top:14px">
+    <button id="retrain">↻ retrain</button>
+    <span style="font-family:var(--mono);font-size:11.5px;color:var(--dim)">slide to change sparsity — the model retrains live (Adam, importance-weighted MSE, sparse inputs)</span>
+  </div>
+  <div class="stats">
+    <div class="stat"><div class="k">feature probability</div><div class="v" id="pp">1.00</div></div>
+    <div class="stat"><div class="k">features represented</div><div class="v" id="act">2 / 5</div></div>
+    <div class="stat"><div class="k">geometry</div><div class="v geo" id="geoname">on the axes</div></div>
+    <div class="stat"><div class="k">loss</div><div class="v" id="loss">—</div></div>
+    <div class="stat"><div class="k">train step</div><div class="v" id="stp">0</div></div>
+  </div>
+</div>
+
+<div class="note"><b>What you're seeing.</b> The model is <code style="color:var(--gold)">out = ReLU((x·W)·Wᵀ + b)</code> — it compresses x (5 sparse features) through 2 hidden dims and tries to reconstruct it, weighting each feature by an <b>importance</b> that decays 1 → 0.59. With dense inputs (S=0) it behaves like PCA: keep the top 2, drop the rest (you'll see 2 arrows on near-orthogonal axes, 3 collapsed to the origin). As sparsity rises, collisions become rare, so storing an extra feature — even with interference — pays off: the arrows fan out into a <b>digon → triangle → pentagon</b>. That packing of more features than dimensions <b>is superposition</b> — and it's why the inside of a network looks like a smear: more meanings than neurons. This is a from-scratch JS reimplementation of the experiment in Anthropic's <b>Toy Models of Superposition</b> notebook (Elhage, … Olah, 2022, MIT) — the math is re-derived and trained live; the result is theirs.</div>
+
+<footer>ENTELÉCHEIA · Book III · Circuits · a live tool · reimplementation of Anthropic's Toy Models of Superposition (Elhage et al., 2022, MIT) — cited, not republished · catalogued by David Lee Wise (ROOT0) · instance AVAN<br>
+<a href="https://davidwise01.github.io/circuits/">← Circuits</a> · <a href="https://davidwise01.github.io/entelecheia/">ENTELÉCHEIA</a> · <a href="https://transformer-circuits.pub/2022/toy_model/">the original paper ▶</a></footer>
+</div>
+<script>
+// ── the toy model, re-derived: x(5) -> h=xW(2) -> out=relu(hW^T+b)(5), importance-weighted MSE on sparse inputs ──
+const NF=5, NH=2, BS=256, IMP=[]; for(let f=0;f<NF;f++) IMP.push(Math.pow(0.9,f));
+let W,b,mW,vW,mb,vb,t,S,P,lastLoss=0;
+function randn(){let u=0,v=0;while(!u)u=Math.random();while(!v)v=Math.random();return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v);}
+function reset(){
+  W=[];mW=[];vW=[];for(let f=0;f<NF;f++){W.push([randn()*0.3,randn()*0.3]);mW.push([0,0]);vW.push([0,0]);}
+  b=new Array(NF).fill(0);mb=new Array(NF).fill(0);vb=new Array(NF).fill(0);t=0;
+}
+function step(){
+  t++; const lr=8e-3, b1=0.9,b2=0.999;
+  const gW=[[0,0],[0,0],[0,0],[0,0],[0,0]], gb=new Array(NF).fill(0); let lossAcc=0;
+  for(let n=0;n<BS;n++){
+    // sparse input
+    const x=new Array(NF); for(let f=0;f<NF;f++) x[f]=(Math.random()<P)?Math.random():0;
+    // forward
+    let h0=0,h1=0; for(let f=0;f<NF;f++){h0+=x[f]*W[f][0];h1+=x[f]*W[f][1];}
+    const z=new Array(NF),out=new Array(NF),g=new Array(NF);
+    for(let f=0;f<NF;f++){z[f]=h0*W[f][0]+h1*W[f][1]+b[f]; out[f]=z[f]>0?z[f]:0;
+      const d=2*IMP[f]*(out[f]-x[f])*(z[f]>0?1:0); g[f]=d; gb[f]+=d;
+      lossAcc+=IMP[f]*(x[f]-out[f])*(x[f]-out[f]);}
+    // dW: decoder path g_f*h_h + encoder path x_f*(sum g_f' W_f'h)
+    let dh0=0,dh1=0; for(let f=0;f<NF;f++){dh0+=g[f]*W[f][0];dh1+=g[f]*W[f][1];}
+    for(let f=0;f<NF;f++){ gW[f][0]+=g[f]*h0 + x[f]*dh0; gW[f][1]+=g[f]*h1 + x[f]*dh1; }
+  }
+  lastLoss=lossAcc/BS;
+  // adam
+  for(let f=0;f<NF;f++){
+    for(let h=0;h<NH;h++){ const d=gW[f][h]/BS;
+      mW[f][h]=b1*mW[f][h]+(1-b1)*d; vW[f][h]=b2*vW[f][h]+(1-b2)*d*d;
+      W[f][h]-=lr*(mW[f][h]/(1-Math.pow(b1,t)))/(Math.sqrt(vW[f][h]/(1-Math.pow(b2,t)))+1e-8);}
+    const db=gb[f]/BS; mb[f]=b1*mb[f]+(1-b1)*db; vb[f]=b2*vb[f]+(1-b2)*db*db;
+    b[f]-=lr*(mb[f]/(1-Math.pow(b1,t)))/(Math.sqrt(vb[f]/(1-Math.pow(b2,t)))+1e-8);
+  }
+}
+// viridis-ish color by importance (0..1)
+function viridis(u){const s=[[68,1,84],[59,82,139],[33,145,140],[94,201,98],[253,231,37]];u=Math.max(0,Math.min(1,u));const i=u*(s.length-1),k=Math.floor(i),fr=i-k;const a=s[k],c=s[Math.min(k+1,s.length-1)];return`rgb(${Math.round(a[0]+(c[0]-a[0])*fr)},${Math.round(a[1]+(c[1]-a[1])*fr)},${Math.round(a[2]+(c[2]-a[2])*fr)})`;}
+const geo=document.getElementById('geo'),gx=geo.getContext('2d');
+const wtw=document.getElementById('wtw'),wx=wtw.getContext('2d');
+function drawGeo(){
+  const Wd=geo.width,Hd=geo.height,cx=Wd/2,cy=Hd/2,R=Wd*0.36;
+  gx.fillStyle='#0a0d14';gx.fillRect(0,0,Wd,Hd);
+  gx.strokeStyle='rgba(150,165,190,0.15)';gx.lineWidth=1;
+  gx.beginPath();gx.arc(cx,cy,R,0,7);gx.stroke();
+  gx.beginPath();gx.moveTo(cx-R,cy);gx.lineTo(cx+R,cy);gx.moveTo(cx,cy-R);gx.lineTo(cx,cy+R);gx.stroke();
+  for(let f=NF-1;f>=0;f--){ // draw least-important first
+    const u=(NF>1)?1-f/(NF-1):1, col=viridis(u);
+    const ex=cx+W[f][0]*R, ey=cy-W[f][1]*R;
+    gx.strokeStyle=col;gx.lineWidth=2.5;gx.beginPath();gx.moveTo(cx,cy);gx.lineTo(ex,ey);gx.stroke();
+    gx.fillStyle=col;gx.beginPath();gx.arc(ex,ey,5,0,7);gx.fill();
+  }
+}
+function drawWtW(){
+  const Wd=wtw.width,n=NF,cell=Math.floor((Wd-40)/n),ox=20,oy=20;
+  wx.fillStyle='#0a0d14';wx.fillRect(0,0,wtw.width,wtw.height);
+  let mx=0; const M=[];
+  for(let i=0;i<n;i++){M.push([]);for(let j=0;j<n;j++){const v=W[i][0]*W[j][0]+W[i][1]*W[j][1];M[i].push(v);mx=Math.max(mx,Math.abs(v));}}
+  mx=Math.max(mx,0.5);
+  for(let i=0;i<n;i++)for(let j=0;j<n;j++){const v=M[i][j]/mx;
+    let r,g,bb; if(v>=0){r=208;g=85+(0)*v;bb=106; const a=v; r=Math.round(10+(208-10)*a);g=Math.round(13+(85-13)*a);bb=Math.round(20+(106-20)*a);}
+    else{const a=-v; r=Math.round(10+(70-10)*a);g=Math.round(13+(200-13)*a);bb=Math.round(20+(224-20)*a);}
+    wx.fillStyle=`rgb(${r},${g},${bb})`;wx.fillRect(ox+j*cell,oy+i*cell,cell-1,cell-1);}
+  wx.fillStyle='#76808f';wx.font='11px "Space Mono",monospace';wx.textAlign='center';
+  for(let i=0;i<n;i++){wx.fillText('f'+i,ox+i*cell+cell/2,oy+n*cell+14);wx.textAlign='right';wx.fillText('f'+i,ox-4,oy+i*cell+cell/2+4);wx.textAlign='center';}
+}
+function geoName(act){return act<=1?'collapsed':act===2?'on the axes':act===3?'triangle':act===4?'square / cross':'pentagon';}
+function updateStats(){
+  let act=0;for(let f=0;f<NF;f++){if(Math.hypot(W[f][0],W[f][1])>0.3)act++;}
+  document.getElementById('act').textContent=act+' / '+NF;
+  document.getElementById('geoname').textContent=geoName(act);
+  document.getElementById('loss').textContent=lastLoss.toFixed(4);
+  document.getElementById('stp').textContent=t;
+  document.getElementById('pp').textContent=P.toFixed(2);
+}
+function setS(s){S=s;P=1-s;document.getElementById('spv').textContent='S = '+s.toFixed(2)+' · p = '+P.toFixed(2);reset();}
+const spEl=document.getElementById('sp');
+spEl.addEventListener('input',()=>setS(parseFloat(spEl.value)));
+document.getElementById('retrain').addEventListener('click',()=>setS(S));
+function loop(){ for(let k=0;k<4;k++) if(t<4000) step(); drawGeo();drawWtW();updateStats(); requestAnimationFrame(loop); }
+setS(0); drawGeo();drawWtW();updateStats(); requestAnimationFrame(loop);
+</script>
+</body></html>
